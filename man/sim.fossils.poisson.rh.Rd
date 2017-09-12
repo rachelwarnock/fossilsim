@@ -28,7 +28,7 @@ Simulate fossils under a Poisson sampling model with individual rates for every 
 # simulate tree
 t<-TreeSim::sim.bd.taxa(4,1,1,0.10)[[1]]
 # simulate fossils
-f<-sim.fossils.poisson(t)
+f<-sim.fossils.poisson.rh(t)
 plot(f$fossils, t)
 f$rates
 }

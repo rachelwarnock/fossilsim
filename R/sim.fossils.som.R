@@ -12,13 +12,13 @@
 #' # simulate tree
 #' t<-TreeSim::sim.bd.taxa(4,1,1,0.10)[[1]]
 #' # simulate fossils
-#' f<-sim.fossils.poisson(t)
+#' f<-sim.fossils.poisson.rh(t)
 #' plot(f$fossils, t)
 #' f$rates
 #' @export
 sim.fossils.poisson.rh <- function(tree, rd = rlnorm(nrow(tree$edge)+1,0.1,0.1), root.edge=TRUE){
 
-  rates <- numeric()
+  rates <- numeric() #keeps track of the rates applied to the edges of the tree. Also returned as an output object
 
   node.ages <- n.ages(tree)
 
@@ -63,10 +63,10 @@ sim.fossils.poisson.rh <- function(tree, rd = rlnorm(nrow(tree$edge)+1,0.1,0.1),
     }
 
     # sample fossil numbers from the Poisson distribution
-    rates <- c(rates, rd)
-    rates <- rates[1:(nrow(tree$edge)+1)]
+    rates <- c(rates, rd) #rd is the user-defined rate distribution
+    rates <- rates[1:(nrow(tree$edge)+1)] #Limits the size of the vector to total number of edges in the tree including the root edge.
 
-    rand <- rpois(1,b*rates[row])
+    rand <- rpois(1,b*rates[row]) #applying individual rates to each edge b
 
     if(rand > 0){
       h <- runif(rand, min = lineage.end, max = lineage.start)
@@ -99,12 +99,13 @@ sim.fossils.poisson.rh <- function(tree, rd = rlnorm(nrow(tree$edge)+1,0.1,0.1),
 
 sim.fossils.poisson.rde <- function(tree, rd = rlnorm(1,0.1,0.1), root.edge = TRUE){
 
-  rates <- c()
-  ancestor <- c()
+  rates <- c() #keeps track of the rates applied to the edges of the tree. Also returned as an output object.
+  ancestor <- c() #internal vector which keeps track of the ancestor nodes on which rates have already been applied. The vector grows as the tree is traversed from root to present time.
   fossils <- data.frame(h = numeric(), sp = numeric())
 
   node.ages <- n.ages(tree)
 
+  # Check if root edge is present and apply poisson sampling on it.
   if(exists("root.edge",tree)){
 
     root <- length(tree$tip.label) + 1
@@ -115,47 +116,37 @@ sim.fossils.poisson.rde <- function(tree, rd = rlnorm(1,0.1,0.1), root.edge = TR
     lineage.start <- lineage.end + b
 
     # sample fossil numbers from the Poisson distribution
-    rates <- c(rates, rd)
-    rand = rpois(1, b*rates)
-
-    #cat("The random poisson number is : ", rand, "\n")
+    rates <- c(rates, rd) #rd is the user-defined rate distribution
+    rand = rpois(1, b*rates) #apply the above rate to the root edge
 
     if(rand > 0){
       h <- runif(rand, min=lineage.end, max=lineage.start)
-      #print(h)
       fossils <- rbind(fossils, data.frame(h=h,sp=root))
-      #print(fossils)
+
     }
   }
 
-  else stop("Please input a rooted tree")
-
+  else stop("Please input a rooted tree") #This works only for rooted trees. When the input tree does not have any roots, the function stops.
 
   for(i in tree$edge[,2]){
 
-    extant1 <- i
+    extant1 <- i #extant 1 is the node currently being investigated by the function.
     row <- which(tree$edge[,2] == extant1)
-    ancestor1 <- tree$edge[,1][row]
+    ancestor1 <- tree$edge[,1][row] #ancestor1 is the ancestor of the current node.
+
+    #Check if the current ancestor is already present in the internal ancestor vector.
     if(ancestor1 %in% ancestor){
-      #cat(ancestor1, "is already present in", ancestor, "\n")
-      ancestor <- c(ancestor, ancestor1)
-      rates <- c(rates, rates[which(ancestor1 == ancestor)[1] + 1])
-      next
+      ancestor <- c(ancestor, ancestor1) #If yes, add the current ancestor to the vector
+      rates <- c(rates, rates[which(ancestor1 == ancestor)[1] + 1]) #use the rate already applied on that ancestor
+      next #move to the next edge.
     }
-
-    #if(row == row2){
-
-    # rates <- c(rates, rates[row])
-    #next()
-
-    #}
 
     else {
 
       row2 <- which(tree$edge[,1] == ancestor1)[2]
       extant2  <- tree$edge[,2][row2]
 
-      ancestor <- c(ancestor, ancestor1)
+      ancestor <- c(ancestor, ancestor1) #add the new ancestor to the internal vector
 
       # get the age of the ancestor
 
@@ -165,12 +156,12 @@ sim.fossils.poisson.rde <- function(tree, rd = rlnorm(1,0.1,0.1), root.edge = TR
       # work out the min age of the lineage (e.g. when that lineage became extinct)
       # & get the branch length
 
-      b = c(tree$edge.length[row], tree$edge.length[row2])
+      b = c(tree$edge.length[row], tree$edge.length[row2]) # The 2 edges that arise from the current ancestor.
       lineage.end = lineage.start - b # branch length
 
-      rates <- c(rates, rates[row]*rd)
+      rates <- c(rates, rates[row]*rd) #rd is the user defined rate distribution. This rate is a multiplicative factor of the ancesteral rate.
 
-      # sample fossil numbers from the Poisson distribution
+      # sample fossil numbers for each edge from the Poisson distribution
 
       rand1 <- rpois(1,b[1]*rates[row + 1])
       rand2 <- rpois(1,b[2]*rates[row + 1])
