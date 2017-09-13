@@ -2,31 +2,47 @@
 % Please edit documentation in R/sim.fossils.som.R
 \name{sim.fossils.poisson.rde}
 \alias{sim.fossils.poisson.rde}
-\title{Simulate fossils under a Poisson sampling model rates varying for each edge and dependent on its ancestor}
+\title{Simulate fossils under a Poisson sampling model with rate heterogeneity and dependency.}
 \usage{
-sim.fossils.poisson.rde(tree, rd = rlnorm(1, 0.1, 0.1), root.edge = TRUE)
+sim.fossils.poisson.rde(tree, rootd = rlnorm(1, 0.1, 0.1), edged = rlnorm(1,
+  0.1, 0.1), root.edge = TRUE)
 }
 \arguments{
 \item{tree}{Phylo object.}
 
-\item{rd}{The desired rate distribution from which the rates for individual edges would be
+\item{rootd}{The desired rate distribution from which a single rate for the root edge would be
+sampled (default = rlnorm(1,0.1,0.1)).}
+
+\item{edged}{The desired rate distribution from which rates for all the other edges in the tree would be
 sampled (default = rlnorm(1,0.1,0.1)).}
 
 \item{root.edge}{If TRUE include the root edge (default = TRUE).}
 }
 \value{
-A list with an object of class fossils and a vector of rates applied on each edge.
-sp = node labels. h = ages. rates = rates, The total number of rates is the sum of number of edges in the tree and root
-edge
+A list with an object of class fossils and a named vector of rates applied on each edge:\cr \cr
+fossils: sp = node labels and h = ages. \cr \cr
+rates = rates. A named vector with the total number of rates is the sum of number of edges in the tree and root
+edge. The first rate is applied on the root edge, while the rest of rates are applied on all other edges. The names in this vector
+correspond in a row-wise manner to the edge table of the input phylogentic tree (rates["1"] is the 1st row in the edge table).
 }
 \description{
-Simulate fossils under a Poisson sampling model rates varying for each edge and dependent on its ancestor
+This models allows the user to simulate fossils on a given phylogentic tree with the desired rate distribution.
+Users can also specifiy different rate distributions for root edge and all other edges.The rates applied
+on all the edges (except the root) is obtained as a multiplicative factor of the rate applied on the
+ancesteral of the current edge and the rate distribution applied on the current edge \cr
+rate.current.edge = rate.ancester.edge * edged \cr
+The rates applied on 2 edges with a common ancestor will be the same. Fossil numbers are simulated proportial to branch length of the edge.
 }
 \examples{
 # simulate tree
 t<-TreeSim::sim.bd.taxa(4,1,1,0.10)[[1]]
+
 # simulate fossils
 f<-sim.fossils.poisson.rde(t)
+
+#plot fossils on tree
 plot(f$fossils, t)
+
+#the rates vector
 f$rates
 }

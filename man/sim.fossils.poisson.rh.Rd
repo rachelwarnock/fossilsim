@@ -2,7 +2,7 @@
 % Please edit documentation in R/sim.fossils.som.R
 \name{sim.fossils.poisson.rh}
 \alias{sim.fossils.poisson.rh}
-\title{Simulate fossils under a Poisson sampling model with individual rates for every edge}
+\title{Simulate fossils under a Poisson sampling model with rate heterogeneity.}
 \usage{
 sim.fossils.poisson.rh(tree, rd = rlnorm(nrow(tree$edge) + 1, 0.1, 0.1),
   root.edge = TRUE)
@@ -11,24 +11,36 @@ sim.fossils.poisson.rh(tree, rd = rlnorm(nrow(tree$edge) + 1, 0.1, 0.1),
 \item{tree}{Phylo object.}
 
 \item{rd}{The desired rate distribution from which the rates for individual edges would be
-sampled (default = rlnorm(nrow(t$edge)+1,0.1,0.1)).
-The total number of rates to be sampled is equal to the number of edges (include the root
-edge) in the tree.}
+sampled.\cr (default = rlnorm(nrow(t$edge)+1,0.1,0.1)).\cr
+The total number of rates to be sampled is equal to the number of edges (including the root
+edge, if available) in the tree.}
 
 \item{root.edge}{If TRUE include the root edge (default = TRUE).}
 }
 \value{
-A list with an object of class fossils and a vector of rates applied on each edge.
-sp = node labels. h = ages. rates = rates.
+A list with an object of class fossils and a named vector of rates applied on each edge:\cr \cr
+fossils: sp = node labels and h = ages. \cr \cr
+rates = rates. A named vector with the total number of rates equal to the sum of number of edges in the tree and root
+edge (if root.edge = F or the tree does not have root edge, the length equals the number of edges). The names in this vector correspond
+in a row-wise manner to the edge table of the input phylogentic tree (rates["1"] is the 1st row in the edge table). Thus, the first element of this vector is the rate
+applied to the first edge of the tree (1st row of the edge table). The last element of this vector is the rate applied to the
+root edge, if available.
 }
 \description{
-Simulate fossils under a Poisson sampling model with individual rates for every edge
+This model allows users to simulate fossils on a given phylogentic tree with a desired rate distribution.
+Users can specifiy a rate distribution from which rates for all the edges in the tree (including the root edge, if available)
+will be drawn. Thus, each edge is applied a different rate. Varying rates are also applied to two edges with a common ancestor. Fossil numbers are simulated proportional to the branch length of the edge.
 }
 \examples{
 # simulate tree
 t<-TreeSim::sim.bd.taxa(4,1,1,0.10)[[1]]
+
 # simulate fossils
 f<-sim.fossils.poisson.rh(t)
+
+#plot fossils on tree
 plot(f$fossils, t)
+
+#rates vector
 f$rates
 }
