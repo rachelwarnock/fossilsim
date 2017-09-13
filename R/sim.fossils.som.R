@@ -43,9 +43,7 @@ sim.fossils.poisson.rh <- function(tree, rd = rlnorm(nrow(tree$edge)+1,0.1,0.1),
   if(root.edge && exists("root.edge",tree) ){
     if(nrow(tree$edge)+1 == length(rd)){ #if the total number of rates to be drawn is equal to number of all edges and root edge
       lineages <- c(tree$edge[,2], root)
-
       rates <- c(rd) #rd is user specified rate distribution
-
       names(rates) <- c(1:nrow(tree$edge),"RootEdge") #give names to elements of the rates
     }
     else stop("Please Check if the number of rates to be drawn is equal to Number of Edges in the tree (Include the root edge)")
